@@ -27,7 +27,7 @@ releaseDir="/byss/docroot/stereopipeline/daily_build"
 link="http://byss.arc.nasa.gov/stereopipeline/daily_build"
 masterMachine="lunokhod1"
 virtualMachines="centos-6"
-buildMachines="andey $virtualMachines"
+buildMachines="andey $virtualMachines $masterMachine"
 
 resumeRun=0 # Must be set to 0 in production. 1=Resume where it left off.
 if [ "$(echo $* | grep resume)" != "" ]; then resumeRun=1; fi
@@ -106,7 +106,7 @@ fi
 # as we won't get to the tests if the builds fail.
 if [ "$resumeRun" -eq 0 ]; then
     for buildMachine in $buildMachines; do
-        testMachines=$(get_test_machines $buildMachine $masterMachine)
+        testMachines=$(get_test_machines $buildMachine)
         for testMachine in $testMachines; do
 
             outputTestFile=$(output_test_file $buildDir $testMachine)
@@ -126,7 +126,7 @@ fi
 # which fails on other machines. When it comes to testing though,
 # we'll test on $masterMachine the build from centos-6.
 echo "Starting up the builds..."
-for buildMachine in $buildMachines $masterMachine; do
+for buildMachine in $buildMachines; do
 
     echo "Setting up and launching: $buildMachine"
 
@@ -192,7 +192,7 @@ while [ 1 ]; do
         statusLine=$(cat $statusFile)
         tarBall=$(echo $statusLine | awk '{print $1}')
         progress=$(echo $statusLine | awk '{print $2}')
-        testMachines=$(get_test_machines $buildMachine $masterMachine)
+        testMachines=$(get_test_machines $buildMachine)
 
         if [ "$progress" = "now_building" ]; then
             # Keep waiting
@@ -373,7 +373,7 @@ for buildMachine in $buildMachines; do
     rsync -avz $buildMachine:$outputFile logs 2>/dev/null
 
     # Append the test logs
-    testMachines=$(get_test_machines $buildMachine $masterMachine)
+    testMachines=$(get_test_machines $buildMachine)
     for testMachine in $testMachines; do
         outputTestFile=$(output_test_file $buildDir $testMachine)
         rsync -avz $testMachine:$outputTestFile logs 2>/dev/null
